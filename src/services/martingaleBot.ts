@@ -25,16 +25,16 @@ export class MartingaleBotService {
   private createInitialState(): MartingaleBotState {
     const defaultConfig: MartingaleConfig = {
       symbol: 'SHIBUSDT',
-      initialStake: 2.0,
-      galeFactor: 1.8,
-      maxAttempts: 4,
-      minProbability: 70.0,
-      victoryCooldown: 60,
-      defeatCooldown: 180,
-      contractDuration: 30,
-      maxDailyLoss: 15.0,
+      initialStake: 10.0,
+      galeFactor: 1.5,
+      maxAttempts: 3,
+      minProbability: 65.0,
+      victoryCooldown: 120000, // 2 minutes in ms
+      defeatCooldown: 600000, // 10 minutes in ms
+      contractDuration: 1800000, // 30 minutes in ms
+      maxDailyLoss: 20.0,
       capitalTotal: 100.0,
-      maxRiskPerCycle: 20.0
+      maxRiskPerCycle: 35.0
     };
 
     const defaultStats: MartingaleStats = {
@@ -407,10 +407,10 @@ export class MartingaleBotService {
     this.state.currentCycle = undefined;
   }
 
-  private startCooldown(seconds: number): void {
+  private startCooldown(milliseconds: number): void {
     this.state.stats.isInCooldown = true;
-    this.state.stats.cooldownUntil = Date.now() + (seconds * 1000);
-    console.log(`⏸️ Cooldown iniciado: ${seconds}s`);
+    this.state.stats.cooldownUntil = Date.now() + milliseconds;
+    console.log(`⏸️ Cooldown iniciado: ${Math.round(milliseconds/1000)}s`);
   }
 
   private isInCooldown(): boolean {

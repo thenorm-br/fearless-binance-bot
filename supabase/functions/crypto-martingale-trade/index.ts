@@ -60,18 +60,27 @@ serve(async (req) => {
       throw new Error('Binance API credentials not configured');
     }
 
-    // Calculate quantity based on stake amount (handle SHIB decimals)
+    // Calculate quantity based on stake amount
     let quantity = stake / price;
     
-    // For SHIB, round to appropriate decimal places (typically 8 for crypto)
+    // For SHIB, handle proper decimal precision
     if (symbol === 'SHIBUSDT') {
-      quantity = Math.floor(quantity); // SHIB typically uses whole numbers
+      // SHIB uses 8 decimal places, but ensure minimum order size
+      quantity = parseFloat(quantity.toFixed(0)); // Whole numbers for SHIB
+      
+      // Binance minimum order for SHIB is typically 1 USDT worth
+      const minQuantity = 1 / price; // Minimum 1 USDT worth
+      if (quantity < minQuantity) {
+        quantity = Math.ceil(minQuantity);
+      }
     } else {
       quantity = parseFloat(quantity.toFixed(8)); // Standard crypto precision
     }
     
+    console.log(`Calculated quantity: ${quantity} ${symbol} for stake $${stake} at price $${price}`);
+    
     if (quantity <= 0) {
-      throw new Error(`Invalid quantity calculated: ${quantity} for ${symbol}`);
+      throw new Error(`Invalid quantity calculated: ${quantity} for ${symbol}. Stake: $${stake}, Price: $${price}`);
     }
 
     // Create timestamp and signature for Binance API
@@ -93,9 +102,9 @@ serve(async (req) => {
       .map(b => b.toString(16).padStart(2, '0'))
       .join('');
 
-    // Place order on Binance
+    // Place order on Binance (MAINNET)
     const binanceResponse = await fetch(
-      `https://testnet.binance.vision/api/v3/order?${params}&signature=${hexSignature}`,
+      `https://api.binance.com/api/v3/order?${params}&signature=${hexSignature}`,
       {
         method: 'POST',
         headers: {
