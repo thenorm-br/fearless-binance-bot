@@ -23,3 +23,6 @@ verify_jwt = false
 
 [functions.crypto-martingale-trade]
 verify_jwt = true
+
+[functions.test-martingale]
+verify_jwt = true

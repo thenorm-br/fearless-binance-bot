@@ -56,8 +56,12 @@ serve(async (req) => {
     const apiKey = Deno.env.get('BINANCE_API_KEY');
     const apiSecret = Deno.env.get('BINANCE_SECRET_KEY');
 
+    console.log('API Key configured:', !!apiKey);
+    console.log('API Secret configured:', !!apiSecret);
+
     if (!apiKey || !apiSecret) {
-      throw new Error('Binance API credentials not configured');
+      console.error('Missing Binance credentials');
+      throw new Error('Binance API credentials not configured. Please add BINANCE_API_KEY and BINANCE_SECRET_KEY to Supabase secrets.');
     }
 
     // Calculate quantity based on stake amount

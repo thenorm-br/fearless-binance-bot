@@ -33,8 +33,8 @@ export class MartingaleBotService {
       victoryCooldown: 120000, // 2 minutes in ms
       defeatCooldown: 600000, // 10 minutes in ms
       contractDuration: 1800000, // 30 minutes in ms
-      maxDailyLoss: 20.0,
-      capitalTotal: 100.0,
+      maxDailyLoss: 10.0, // Reduced from 20 to 10
+      capitalTotal: 50.0, // Reduced from 100 to 50
       maxRiskPerCycle: 35.0
     };
 

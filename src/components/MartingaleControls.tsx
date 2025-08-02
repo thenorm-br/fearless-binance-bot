@@ -7,6 +7,7 @@ import { Play, Square, Settings, TrendingUp, TrendingDown } from 'lucide-react';
 import { martingaleBot } from '@/services/martingaleBot';
 import { MartingaleStats, TradingSignal, MartingaleConfig } from '@/types/martingale';
 import { MartingaleConfigModal } from './MartingaleConfigModal';
+import { CredentialsTest } from './CredentialsTest';
 import { useToast } from '@/hooks/use-toast';
 
 const MartingaleControls: React.FC = () => {
@@ -244,6 +245,11 @@ const MartingaleControls: React.FC = () => {
         config={config}
         onSave={handleConfigSave}
       />
+      
+      {/* Test credentials component */}
+      <div className="mt-4">
+        <CredentialsTest />
+      </div>
     </div>
   );
 };
