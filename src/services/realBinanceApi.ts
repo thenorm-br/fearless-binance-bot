@@ -11,6 +11,12 @@ class RealBinanceApiService {
       
       if (error) {
         console.error('Supabase function error details:', error);
+        
+        // If data contains specific error information from our edge function
+        if (data?.error) {
+          throw new Error(`Binance API Error: ${data.error}. ${data.details ? 'Details: ' + data.details : ''}`);
+        }
+        
         throw new Error(`Failed to fetch account balances: ${error.message || 'Unknown error'}`);
       }
 

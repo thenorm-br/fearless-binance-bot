@@ -103,7 +103,17 @@ serve(async (req) => {
     if (!response.ok) {
       const errorText = await response.text();
       console.error(`Binance API error: ${response.status} - ${errorText}`);
-      throw new Error(`Binance API error: ${response.status} - ${errorText}`);
+      
+      // Return specific Binance error instead of throwing
+      return new Response(JSON.stringify({ 
+        error: `Binance API error: ${response.status}`,
+        details: errorText,
+        binanceStatus: response.status,
+        timestamp: new Date().toISOString()
+      }), {
+        status: 400, // Use 400 instead of 500 for Binance API errors
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     const accountData = await response.json();
