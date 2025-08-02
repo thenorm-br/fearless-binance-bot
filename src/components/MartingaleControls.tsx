@@ -40,7 +40,7 @@ const MartingaleControls: React.FC = () => {
       setIsRunning(true);
       toast({
         title: "Martingale Bot Iniciado",
-        description: "Robô Martingale SOLUSDT iniciado com sucesso!"
+        description: "Robô Martingale SHIBUSDT iniciado com sucesso!"
       });
     } catch (error) {
       toast({
@@ -57,7 +57,7 @@ const MartingaleControls: React.FC = () => {
       setIsRunning(false);
       toast({
         title: "Martingale Bot Parado",
-        description: "Robô Martingale SOLUSDT parado com sucesso!"
+        description: "Robô Martingale SHIBUSDT parado com sucesso!"
       });
     } catch (error) {
       toast({
@@ -98,7 +98,7 @@ const MartingaleControls: React.FC = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <TrendingUp className="h-5 w-5" />
-            Martingale Bot - SOLUSDT
+            Martingale Bot - SHIBUSDT
             <Badge variant={isRunning ? "default" : "secondary"}>
               {isRunning ? "Ativo" : "Parado"}
             </Badge>
@@ -134,9 +134,9 @@ const MartingaleControls: React.FC = () => {
           {/* Current Status */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="space-y-1">
-              <p className="text-sm text-muted-foreground">Preço SOL</p>
+              <p className="text-sm text-muted-foreground">Preço SHIB</p>
               <p className="text-lg font-semibold">
-                {currentPrice ? `$${currentPrice.toFixed(4)}` : 'N/A'}
+                {currentPrice ? `$${currentPrice.toFixed(8)}` : 'N/A'}
               </p>
             </div>
             <div className="space-y-1">
