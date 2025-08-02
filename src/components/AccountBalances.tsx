@@ -25,15 +25,18 @@ export function AccountBalances() {
     setIsLoading(true);
     try {
       console.log('Starting to fetch account balances...');
-      console.log('User authenticated:', !!window.localStorage.getItem('sb-ijagpzrtjljtfaefvgej-auth-token'));
       
       const realBalances = await realBinanceApi.getAccountBalances();
       console.log('Real balances received:', realBalances);
+      console.log('Balances length:', realBalances?.length);
+      console.log('First balance:', realBalances?.[0]);
       
       if (realBalances && realBalances.length > 0) {
         setBalances(realBalances);
-        setTotalValue(realBalances.reduce((sum, balance) => sum + balance.usdValue, 0));
-        console.log('Balances set successfully, total value:', realBalances.reduce((sum, balance) => sum + balance.usdValue, 0));
+        const total = realBalances.reduce((sum, balance) => sum + (balance.usdValue || 0), 0);
+        setTotalValue(total);
+        console.log('Balances set successfully, total value:', total);
+        console.log('Individual balances:', realBalances.map(b => `${b.asset}: $${b.usdValue}`));
       } else {
         console.warn('No balances received from API, showing empty state');
         setBalances([]);
