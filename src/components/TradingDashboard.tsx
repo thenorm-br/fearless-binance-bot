@@ -172,3 +172,5 @@ export function TradingDashboard() {
     </div>
   );
 }
+
+export default TradingDashboard;
