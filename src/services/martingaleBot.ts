@@ -9,6 +9,7 @@ import {
 } from '@/types/martingale';
 import { technicalAnalysis, TechnicalAnalysisService } from './technicalAnalysis';
 import { realBinanceApi } from './realBinanceApi';
+import { ConnectivityValidator } from './connectivityValidator';
 
 export class MartingaleBotService {
   private state: MartingaleBotState;
@@ -69,9 +70,22 @@ export class MartingaleBotService {
 
     console.log('🚀 Iniciando Martingale Bot SHIBUSDT');
     
+    // Validate all requirements before starting
+    const validation = await ConnectivityValidator.validateAll('SHIBUSDT', this.state.config.maxDailyLoss);
+    
+    if (!validation.success) {
+      const errorMsg = `Falha nas validações: ${validation.errors.join(', ')}`;
+      console.error('❌', errorMsg);
+      await this.logBotActivity('VALIDATION_ERROR', { 
+        errors: validation.errors,
+        details: validation.details 
+      }, 'error');
+      throw new Error(errorMsg);
+    }
+    
     try {
       // Initialize daily tracking
-      const balance = await this.getUsdtBalance();
+      const balance = validation.details.balance || await this.getUsdtBalance();
       this.state.stats.startBalance = balance;
       this.state.stats.isRunning = true;
       this.state.emergencyStop = false;
@@ -89,7 +103,8 @@ export class MartingaleBotService {
       await this.logBotActivity('BOT_STARTED', {
         symbol: this.state.config.symbol,
         startBalance: balance,
-        config: this.state.config
+        config: this.state.config,
+        validation: validation.details
       }, 'success');
       
     } catch (error) {
@@ -276,7 +291,7 @@ export class MartingaleBotService {
         stake: stake,
         quantity: order.quantity,
         timestamp: Date.now(),
-        expiresAt: Date.now() + (this.state.config.contractDuration * 60 * 1000),
+        expiresAt: Date.now() + this.state.config.contractDuration,
         status: 'PENDING',
         attempt: this.state.stats.currentAttempt + 1
       };
