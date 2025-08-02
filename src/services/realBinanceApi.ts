@@ -4,19 +4,30 @@ import { AccountBalance, PriceData, OpenOrder, Trade } from '@/types/trading';
 class RealBinanceApiService {
   async getAccountBalances(): Promise<AccountBalance[]> {
     try {
+      console.log('Calling get-account-balance edge function...');
       const { data, error } = await supabase.functions.invoke('get-account-balance');
       
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase function error:', error);
+        throw new Error(`Failed to fetch account balances: ${error.message}`);
+      }
+
+      if (!data || !data.balances) {
+        console.error('Invalid response structure:', data);
+        throw new Error('Invalid response from account balance service');
+      }
+
+      console.log('Account balances response:', data);
       
       return data.balances.map((balance: any) => ({
         asset: balance.asset,
         free: balance.free.toString(),
         locked: balance.locked.toString(),
         total: balance.total,
-        usdValue: balance.usd_value
+        usdValue: balance.usd_value || 0
       }));
     } catch (error) {
-      console.error('Error fetching account balances:', error);
+      console.error('Error in getAccountBalances:', error);
       throw error;
     }
   }

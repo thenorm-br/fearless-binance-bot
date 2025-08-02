@@ -25,13 +25,22 @@ export function AccountBalances() {
     setIsLoading(true);
     try {
       const realBalances = await realBinanceApi.getAccountBalances();
-      setBalances(realBalances);
-      setTotalValue(realBalances.reduce((sum, balance) => sum + balance.usdValue, 0));
+      console.log('Real balances received:', realBalances);
+      
+      if (realBalances && realBalances.length > 0) {
+        setBalances(realBalances);
+        setTotalValue(realBalances.reduce((sum, balance) => sum + balance.usdValue, 0));
+      } else {
+        console.warn('No balances received from API');
+        setBalances([]);
+        setTotalValue(0);
+      }
     } catch (error) {
       console.error('Error fetching balances:', error);
-      // Fallback to mock data only if real API fails
-      setBalances(mockBalances);
-      setTotalValue(mockBalances.reduce((sum, balance) => sum + balance.usdValue, 0));
+      // Show the actual error to user
+      setBalances([]);
+      setTotalValue(0);
+      // You could also set an error state here to show to the user
     } finally {
       setIsLoading(false);
     }

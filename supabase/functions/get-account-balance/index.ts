@@ -20,14 +20,22 @@ serve(async (req) => {
     );
 
     const { data: { user } } = await supabaseClient.auth.getUser();
-    if (!user) throw new Error('Unauthorized');
+    if (!user) {
+      console.error('Unauthorized access attempt');
+      throw new Error('Unauthorized');
+    }
+
+    console.log(`Fetching account balance for user: ${user.id}`);
 
     const binanceApiKey = Deno.env.get('BINANCE_API_KEY');
     const binanceSecret = Deno.env.get('BINANCE_SECRET_KEY');
 
     if (!binanceApiKey || !binanceSecret) {
+      console.error('Binance API keys not configured');
       throw new Error('Binance API keys not configured');
     }
+
+    console.log('Binance API keys found, creating signature...');
 
     // Create signature for Binance API
     const timestamp = Date.now();
@@ -52,6 +60,8 @@ serve(async (req) => {
       .map(b => b.toString(16).padStart(2, '0'))
       .join('');
 
+    console.log('Signature created, calling Binance API...');
+
     // Call Binance API
     const response = await fetch(
       `https://api.binance.com/api/v3/account?${queryString}&signature=${signatureHex}`,
@@ -62,24 +72,64 @@ serve(async (req) => {
       }
     );
 
+    console.log(`Binance API response status: ${response.status}`);
+
     if (!response.ok) {
-      throw new Error(`Binance API error: ${response.status}`);
+      const errorText = await response.text();
+      console.error(`Binance API error: ${response.status} - ${errorText}`);
+      throw new Error(`Binance API error: ${response.status} - ${errorText}`);
     }
 
     const accountData = await response.json();
+    console.log(`Account data received. Balances count: ${accountData.balances?.length || 0}`);
 
-    // Update account balances in database
+    // Get current prices for USD conversion
+    const pricesResponse = await fetch('https://api.binance.com/api/v3/ticker/price');
+    const pricesData = await pricesResponse.json();
+    const priceMap = new Map();
+    
+    pricesData.forEach((price: any) => {
+      priceMap.set(price.symbol, parseFloat(price.price));
+    });
+    
+    console.log(`Price data loaded for ${pricesData.length} symbols`);
+
+    // Update account balances in database with USD conversion
     const balances = accountData.balances
       .filter((balance: any) => parseFloat(balance.free) > 0 || parseFloat(balance.locked) > 0)
-      .map((balance: any) => ({
-        user_id: user.id,
-        asset: balance.asset,
-        free: parseFloat(balance.free),
-        locked: parseFloat(balance.locked),
-        total: parseFloat(balance.free) + parseFloat(balance.locked),
-        usd_value: 0, // Will be calculated separately
-        last_updated: new Date().toISOString()
-      }));
+      .map((balance: any) => {
+        const total = parseFloat(balance.free) + parseFloat(balance.locked);
+        let usdValue = 0;
+        
+        // Calculate USD value
+        if (balance.asset === 'USDT' || balance.asset === 'BUSD' || balance.asset === 'USDC') {
+          usdValue = total; // Stablecoins are 1:1 with USD
+        } else {
+          // Try to find price in USDT pair first, then BTC pair
+          const usdtSymbol = `${balance.asset}USDT`;
+          const btcSymbol = `${balance.asset}BTC`;
+          
+          if (priceMap.has(usdtSymbol)) {
+            usdValue = total * priceMap.get(usdtSymbol);
+          } else if (priceMap.has(btcSymbol) && priceMap.has('BTCUSDT')) {
+            const btcPrice = priceMap.get(btcSymbol);
+            const btcUsdPrice = priceMap.get('BTCUSDT');
+            usdValue = total * btcPrice * btcUsdPrice;
+          }
+        }
+        
+        console.log(`Asset: ${balance.asset}, Total: ${total}, USD Value: ${usdValue}`);
+        
+        return {
+          user_id: user.id,
+          asset: balance.asset,
+          free: parseFloat(balance.free),
+          locked: parseFloat(balance.locked),
+          total: total,
+          usd_value: usdValue,
+          last_updated: new Date().toISOString()
+        };
+      });
 
     // Upsert balances
     for (const balance of balances) {
