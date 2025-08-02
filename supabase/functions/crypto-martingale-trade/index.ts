@@ -50,7 +50,7 @@ serve(async (req) => {
 
     const { symbol, side, stake, price }: TradeRequest = await req.json();
 
-    console.log(`SOL Martingale Trade: ${side} ${symbol} $${stake} @ $${price}`);
+    console.log(`Crypto Martingale Trade: ${side} ${symbol} $${stake} @ $${price}`);
 
     // Get Binance API credentials
     const apiKey = Deno.env.get('BINANCE_API_KEY');
@@ -60,11 +60,18 @@ serve(async (req) => {
       throw new Error('Binance API credentials not configured');
     }
 
-    // Calculate quantity based on stake amount
-    const quantity = Math.floor(stake / price);
+    // Calculate quantity based on stake amount (handle SHIB decimals)
+    let quantity = stake / price;
+    
+    // For SHIB, round to appropriate decimal places (typically 8 for crypto)
+    if (symbol === 'SHIBUSDT') {
+      quantity = Math.floor(quantity); // SHIB typically uses whole numbers
+    } else {
+      quantity = parseFloat(quantity.toFixed(8)); // Standard crypto precision
+    }
     
     if (quantity <= 0) {
-      throw new Error('Invalid quantity calculated');
+      throw new Error(`Invalid quantity calculated: ${quantity} for ${symbol}`);
     }
 
     // Create timestamp and signature for Binance API
@@ -105,7 +112,7 @@ serve(async (req) => {
       throw new Error(orderResult.msg || 'Failed to place order');
     }
 
-    console.log('SOL order placed successfully:', orderResult.orderId);
+    console.log(`${symbol} order placed successfully:`, orderResult.orderId);
 
     // Log trade to database
     try {
@@ -124,7 +131,7 @@ serve(async (req) => {
       await supabaseClient.from('bot_logs').insert({
         user_id: user.id,
         level: 'info',
-        message: `SOL Martingale trade executed: ${side} ${quantity} SOL @ $${price}`,
+        message: `${symbol} Martingale trade executed: ${side} ${quantity} @ $${price}`,
         data: {
           type: 'MARTINGALE_TRADE',
           symbol,
@@ -156,7 +163,7 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('SOL Martingale trade error:', error);
+    console.error('Crypto Martingale trade error:', error);
     
     return new Response(
       JSON.stringify({ 

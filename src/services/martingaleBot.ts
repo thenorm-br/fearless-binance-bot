@@ -24,17 +24,17 @@ export class MartingaleBotService {
 
   private createInitialState(): MartingaleBotState {
     const defaultConfig: MartingaleConfig = {
-      symbol: 'SOLUSDT',
-      initialStake: 5.0,
-      galeFactor: 2.0,
-      maxAttempts: 5,
-      minProbability: 65.0,
-      victoryCooldown: 120,
-      defeatCooldown: 300,
-      contractDuration: 60,
-      maxDailyLoss: 50.0,
-      capitalTotal: 1000.0,
-      maxRiskPerCycle: 100.0
+      symbol: 'SHIBUSDT',
+      initialStake: 2.0,
+      galeFactor: 1.8,
+      maxAttempts: 4,
+      minProbability: 70.0,
+      victoryCooldown: 60,
+      defeatCooldown: 180,
+      contractDuration: 30,
+      maxDailyLoss: 15.0,
+      capitalTotal: 100.0,
+      maxRiskPerCycle: 20.0
     };
 
     const defaultStats: MartingaleStats = {
@@ -67,7 +67,7 @@ export class MartingaleBotService {
       throw new Error('Bot já está rodando');
     }
 
-    console.log('🚀 Iniciando Martingale Bot SOLUSDT');
+    console.log('🚀 Iniciando Martingale Bot SHIBUSDT');
     
     try {
       // Initialize daily tracking
@@ -149,7 +149,7 @@ export class MartingaleBotService {
   }
 
   private startWebSocket(): void {
-    const wsUrl = `wss://stream.binance.com:9443/ws/solusdt@ticker`;
+    const wsUrl = `wss://stream.binance.com:9443/ws/shibusdt@ticker`;
     
     this.wsConnection = new WebSocket(wsUrl);
 
@@ -161,12 +161,12 @@ export class MartingaleBotService {
         
         this.technicalAnalysis.addPriceData(this.state.priceHistory, price, volume);
       } catch (error) {
-        console.error('Erro no WebSocket SOL:', error);
+        console.error('Erro no WebSocket SHIB:', error);
       }
     };
 
     this.wsConnection.onclose = () => {
-      console.log('WebSocket SOL fechado');
+      console.log('WebSocket SHIB fechado');
       // Reconnect if bot is still running
       if (this.state.stats.isRunning) {
         setTimeout(() => this.startWebSocket(), 5000);
@@ -174,7 +174,7 @@ export class MartingaleBotService {
     };
 
     this.wsConnection.onerror = (error) => {
-      console.error('Erro WebSocket SOL:', error);
+      console.error('Erro WebSocket SHIB:', error);
     };
   }
 
@@ -248,11 +248,11 @@ export class MartingaleBotService {
       return;
     }
 
-    console.log(`🎯 Executando contrato SOL: ${signal.type} | $${stake} | Prob: ${signal.strength}%`);
+    console.log(`🎯 Executando contrato SHIB: ${signal.type} | $${stake} | Prob: ${signal.strength}%`);
 
     try {
       // Place order through Edge Function
-      const response = await supabase.functions.invoke('sol-martingale-trade', {
+      const response = await supabase.functions.invoke('crypto-martingale-trade', {
         body: {
           symbol: this.state.config.symbol,
           side: signal.type,
@@ -357,7 +357,7 @@ export class MartingaleBotService {
     this.state.stats.currentStreak = Math.max(0, this.state.stats.currentStreak + 1);
     this.state.stats.maxWinStreak = Math.max(this.state.stats.maxWinStreak, this.state.stats.currentStreak);
 
-    console.log(`🎉 VITÓRIA SOL! Lucro: $${profit.toFixed(2)} | Total: $${this.state.stats.totalProfit.toFixed(2)}`);
+    console.log(`🎉 VITÓRIA SHIB! Lucro: $${profit.toFixed(2)} | Total: $${this.state.stats.totalProfit.toFixed(2)}`);
 
     // Complete cycle
     if (this.state.currentCycle) {
@@ -382,7 +382,7 @@ export class MartingaleBotService {
     this.state.stats.currentStreak = Math.min(0, this.state.stats.currentStreak - 1);
     this.state.stats.maxLossStreak = Math.max(this.state.stats.maxLossStreak, Math.abs(this.state.stats.currentStreak));
 
-    console.log(`💔 DERROTA SOL! Perda: $${loss.toFixed(2)} | Total: $${this.state.stats.totalProfit.toFixed(2)}`);
+    console.log(`💔 DERROTA SHIB! Perda: $${loss.toFixed(2)} | Total: $${this.state.stats.totalProfit.toFixed(2)}`);
 
     // Check if reached max attempts
     if (this.state.stats.currentAttempt >= this.state.config.maxAttempts) {
