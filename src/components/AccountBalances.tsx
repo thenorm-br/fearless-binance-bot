@@ -24,23 +24,27 @@ export function AccountBalances() {
   const fetchBalances = async () => {
     setIsLoading(true);
     try {
+      console.log('Starting to fetch account balances...');
+      console.log('User authenticated:', !!window.localStorage.getItem('sb-ijagpzrtjljtfaefvgej-auth-token'));
+      
       const realBalances = await realBinanceApi.getAccountBalances();
       console.log('Real balances received:', realBalances);
       
       if (realBalances && realBalances.length > 0) {
         setBalances(realBalances);
         setTotalValue(realBalances.reduce((sum, balance) => sum + balance.usdValue, 0));
+        console.log('Balances set successfully, total value:', realBalances.reduce((sum, balance) => sum + balance.usdValue, 0));
       } else {
-        console.warn('No balances received from API');
+        console.warn('No balances received from API, showing empty state');
         setBalances([]);
         setTotalValue(0);
       }
     } catch (error) {
       console.error('Error fetching balances:', error);
-      // Show the actual error to user
+      console.error('Error details:', error instanceof Error ? error.message : 'Unknown error');
+      // Show the actual error to user instead of fallback
       setBalances([]);
       setTotalValue(0);
-      // You could also set an error state here to show to the user
     } finally {
       setIsLoading(false);
     }
