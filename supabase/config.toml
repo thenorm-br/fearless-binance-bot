@@ -11,3 +11,6 @@ verify_jwt = true
 
 [functions.get-open-orders]
 verify_jwt = true
+
+[functions.test-binance-connection]
+verify_jwt = false

@@ -7,14 +7,27 @@ class RealBinanceApiService {
       console.log('Calling get-account-balance edge function...');
       const { data, error } = await supabase.functions.invoke('get-account-balance');
       
+      console.log('Raw edge function response:', { data, error });
+      
       if (error) {
-        console.error('Supabase function error:', error);
-        throw new Error(`Failed to fetch account balances: ${error.message}`);
+        console.error('Supabase function error details:', error);
+        throw new Error(`Failed to fetch account balances: ${error.message || 'Unknown error'}`);
       }
 
-      if (!data || !data.balances) {
-        console.error('Invalid response structure:', data);
-        throw new Error('Invalid response from account balance service');
+      if (!data) {
+        console.error('No data received from edge function');
+        throw new Error('No data received from account balance service');
+      }
+
+      if (!data.balances) {
+        console.error('Invalid response structure, missing balances:', data);
+        
+        // Check if it's an error response
+        if (data.error) {
+          throw new Error(`Binance API Error: ${data.error}`);
+        }
+        
+        throw new Error('Invalid response from account balance service - no balances field');
       }
 
       console.log('Account balances response:', data);

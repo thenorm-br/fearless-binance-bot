@@ -68,6 +68,21 @@ export function DebugPanel() {
         };
       }
 
+      // Test Binance connection directly
+      try {
+        const { data, error } = await supabase.functions.invoke('test-binance-connection');
+        info.binanceConnection = {
+          success: !error && data?.success,
+          data: data,
+          error: error?.message
+        };
+      } catch (error) {
+        info.binanceConnection = {
+          success: false,
+          error: error instanceof Error ? error.message : 'Unknown error'
+        };
+      }
+
     } catch (error) {
       info.generalError = error instanceof Error ? error.message : 'Unknown error';
     }
@@ -132,6 +147,23 @@ export function DebugPanel() {
               </Badge>
               {debugInfo.apiService.error && (
                 <p className="text-sm text-red-500 mt-1">Error: {debugInfo.apiService.error}</p>
+              )}
+            </div>
+
+            <div>
+              <h4 className="font-semibold mb-2">Binance Connection Test</h4>
+              <Badge variant={debugInfo.binanceConnection?.success ? "default" : "destructive"}>
+                {debugInfo.binanceConnection?.success ? 'Connected' : 'Failed'}
+              </Badge>
+              {debugInfo.binanceConnection?.error && (
+                <p className="text-sm text-red-500 mt-1">Error: {debugInfo.binanceConnection.error}</p>
+              )}
+              {debugInfo.binanceConnection?.data && (
+                <div className="text-xs text-muted-foreground mt-1">
+                  <pre className="whitespace-pre-wrap bg-muted p-2 rounded mt-2">
+                    {JSON.stringify(debugInfo.binanceConnection.data, null, 2)}
+                  </pre>
+                </div>
               )}
             </div>
           </div>
