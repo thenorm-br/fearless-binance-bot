@@ -17,3 +17,6 @@ verify_jwt = false
 
 [functions.get-public-ip]
 verify_jwt = false
+
+[functions.sol-martingale-trade]
+verify_jwt = true

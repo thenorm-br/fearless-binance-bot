@@ -9,6 +9,7 @@ import { TradingStats } from './TradingStats';
 import { AccountBalances } from './AccountBalances';
 import { DebugPanel } from './DebugPanel';
 import { TradingHero } from './TradingHero';
+import MartingaleControls from './MartingaleControls';
 import { tradingBot } from '@/services/tradingBot';
 import { realBinanceApi } from '@/services/realBinanceApi';
 import { TradingPair, BotStats } from '@/types/trading';
@@ -150,9 +151,10 @@ export function TradingDashboard() {
 
         {/* Main Content */}
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid grid-cols-4 w-full max-w-md">
+          <TabsList className="grid grid-cols-5 w-full max-w-2xl">
             <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="trading">Trading</TabsTrigger>
+            <TabsTrigger value="trading">Grid Trading</TabsTrigger>
+            <TabsTrigger value="martingale">Martingale SOL</TabsTrigger>
             <TabsTrigger value="balances">Balances</TabsTrigger>
             <TabsTrigger value="settings">Settings</TabsTrigger>
           </TabsList>
@@ -171,6 +173,10 @@ export function TradingDashboard() {
 
           <TabsContent value="trading">
             <TradingPairsGrid pairs={monitoredPairs} showDetails />
+          </TabsContent>
+
+          <TabsContent value="martingale">
+            <MartingaleControls />
           </TabsContent>
 
           <TabsContent value="balances">
