@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { AccountBalance } from '@/types/trading';
-import { binanceApi } from '@/services/binanceApi';
+import { realBinanceApi } from '@/services/realBinanceApi';
 import { Wallet, DollarSign, TrendingUp, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -24,12 +24,12 @@ export function AccountBalances() {
   const fetchBalances = async () => {
     setIsLoading(true);
     try {
-      // Use mock data for development
-      setBalances(mockBalances);
-      setTotalValue(mockBalances.reduce((sum, balance) => sum + balance.usdValue, 0));
+      const realBalances = await realBinanceApi.getAccountBalances();
+      setBalances(realBalances);
+      setTotalValue(realBalances.reduce((sum, balance) => sum + balance.usdValue, 0));
     } catch (error) {
       console.error('Error fetching balances:', error);
-      // Fallback to mock data
+      // Fallback to mock data only if real API fails
       setBalances(mockBalances);
       setTotalValue(mockBalances.reduce((sum, balance) => sum + balance.usdValue, 0));
     } finally {

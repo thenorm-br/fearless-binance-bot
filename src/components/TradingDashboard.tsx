@@ -9,11 +9,13 @@ import { TradingStats } from './TradingStats';
 import { AccountBalances } from './AccountBalances';
 import { TradingHero } from './TradingHero';
 import { tradingBot } from '@/services/tradingBot';
+import { realBinanceApi } from '@/services/realBinanceApi';
 import { TradingPair, BotStats } from '@/types/trading';
 import { Activity, DollarSign, TrendingUp, Zap } from 'lucide-react';
 
 export function TradingDashboard() {
   const [monitoredPairs, setMonitoredPairs] = useState<TradingPair[]>([]);
+  const [priceData, setPriceData] = useState<any[]>([]);
   const [botStats, setBotStats] = useState<BotStats>({
     totalProfit: 0,
     totalTrades: 0,
@@ -24,11 +26,41 @@ export function TradingDashboard() {
   });
 
   useEffect(() => {
-    // Update data every 2 seconds
-    const interval = setInterval(() => {
-      setMonitoredPairs(tradingBot.getMonitoredPairs());
+    const fetchRealData = async () => {
+      try {
+        // Fetch real market prices
+        const symbols = ['BTCUSDT', 'ETHUSDT', 'BNBUSDT', 'ADAUSDT', 'SOLUSDT'];
+        const prices = await realBinanceApi.getCurrentPrices(symbols);
+        setPriceData(prices);
+        
+        // Convert to TradingPair format
+        const pairs: TradingPair[] = prices.map(price => ({
+          symbol: price.symbol,
+          price: price.price,
+          priceChangePercent: price.change24h.toFixed(2),
+          status: 'monitoring' as const,
+          lastUpdate: Date.now(),
+          volume24h: price.volume24h,
+          high24h: price.high24h,
+          low24h: price.low24h,
+          isMonitoring: true
+        }));
+        
+        setMonitoredPairs(pairs);
+      } catch (error) {
+        console.error('Error fetching real data:', error);
+        // Fallback to mock bot data
+        setMonitoredPairs(tradingBot.getMonitoredPairs());
+      }
+      
       setBotStats(tradingBot.getBotStats());
-    }, 2000);
+    };
+
+    // Initial fetch
+    fetchRealData();
+    
+    // Update data every 10 seconds
+    const interval = setInterval(fetchRealData, 10000);
 
     return () => clearInterval(interval);
   }, []);
