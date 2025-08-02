@@ -7,6 +7,7 @@ import { TradingPairsGrid } from './TradingPairsGrid';
 import { BotControls } from './BotControls';
 import { TradingStats } from './TradingStats';
 import { AccountBalances } from './AccountBalances';
+import { DebugPanel } from './DebugPanel';
 import { TradingHero } from './TradingHero';
 import { tradingBot } from '@/services/tradingBot';
 import { realBinanceApi } from '@/services/realBinanceApi';
@@ -173,6 +174,7 @@ export function TradingDashboard() {
           </TabsContent>
 
           <TabsContent value="balances">
+            <DebugPanel />
             <AccountBalances />
           </TabsContent>
 
