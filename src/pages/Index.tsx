@@ -4,6 +4,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { LogOut, Loader2 } from 'lucide-react';
 import TradingDashboard from '@/components/TradingDashboard';
+import { AccountBalances } from "@/components/AccountBalances";
+import { DebugPanel } from "@/components/DebugPanel";
+import { CredentialsTest } from "@/components/CredentialsTest";
+import { BinanceApiSetup } from "@/components/BinanceApiSetup";
+import { ApiHealthMonitor } from "@/components/ApiHealthMonitor";
 
 const Index = () => {
   const { user, loading, signOut } = useAuth();
@@ -44,7 +49,14 @@ const Index = () => {
         </div>
       </header>
       <main>
-        <TradingDashboard />
+        <div className="container mx-auto px-4 py-8 space-y-8">
+          <TradingDashboard />
+          <AccountBalances />
+          <ApiHealthMonitor />
+          <BinanceApiSetup />
+          <CredentialsTest />
+          <DebugPanel />
+        </div>
       </main>
     </div>
   );
