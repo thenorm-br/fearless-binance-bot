@@ -65,22 +65,23 @@ serve(async (req) => {
     
     // For SHIB, handle proper decimal precision
     if (symbol === 'SHIBUSDT') {
-      // SHIB uses 8 decimal places, but ensure minimum order size
-      quantity = parseFloat(quantity.toFixed(0)); // Whole numbers for SHIB
+      // SHIB minimum order on Binance is typically 1 USDT
+      // SHIB uses whole numbers for quantity, no decimals
+      quantity = Math.round(quantity); // Round to whole SHIB tokens
       
-      // Binance minimum order for SHIB is typically 1 USDT worth
-      const minQuantity = 1 / price; // Minimum 1 USDT worth
-      if (quantity < minQuantity) {
-        quantity = Math.ceil(minQuantity);
+      // Ensure minimum 1 USDT worth of SHIB
+      if (quantity * price < 1.0) {
+        quantity = Math.ceil(1.0 / price); // At least 1 USDT worth
       }
     } else {
       quantity = parseFloat(quantity.toFixed(8)); // Standard crypto precision
     }
     
     console.log(`Calculated quantity: ${quantity} ${symbol} for stake $${stake} at price $${price}`);
+    console.log(`Order value: $${(quantity * price).toFixed(2)} USDT`);
     
-    if (quantity <= 0) {
-      throw new Error(`Invalid quantity calculated: ${quantity} for ${symbol}. Stake: $${stake}, Price: $${price}`);
+    if (quantity <= 0 || (quantity * price) < 1.0) {
+      throw new Error(`Invalid quantity calculated: ${quantity} for ${symbol}. Order value: $${(quantity * price).toFixed(2)} (min: $1.00)`);
     }
 
     // Create timestamp and signature for Binance API

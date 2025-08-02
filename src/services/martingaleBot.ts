@@ -26,7 +26,7 @@ export class MartingaleBotService {
   private createInitialState(): MartingaleBotState {
     const defaultConfig: MartingaleConfig = {
       symbol: 'SHIBUSDT',
-      initialStake: 10.0,
+      initialStake: 5.0,
       galeFactor: 1.5,
       maxAttempts: 3,
       minProbability: 65.0,
