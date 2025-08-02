@@ -154,7 +154,7 @@ export class MartingaleBotService {
         await this.executeTradingCycle();
       } catch (error) {
         console.error('Erro no ciclo de trading:', error);
-        await this.logBotActivity('ERROR', { error: error.message });
+        await this.logBotActivity('ERROR', { error: error.message }, 'error');
       }
     }, 5000); // Check every 5 seconds
 
@@ -273,7 +273,7 @@ export class MartingaleBotService {
 
     } catch (error) {
       console.error('Erro ao executar contrato:', error);
-      await this.logBotActivity('CONTRACT_ERROR', { error: error.message, signal, stake });
+      await this.logBotActivity('CONTRACT_ERROR', { error: error.message, signal, stake }, 'error');
     }
   }
 
@@ -336,7 +336,7 @@ export class MartingaleBotService {
     this.resetMartingaleCycle();
     this.startCooldown(this.state.config.victoryCooldown);
 
-    await this.logBotActivity('CYCLE_WIN', { profit, cycle: this.state.currentCycle });
+    await this.logBotActivity('CYCLE_WIN', { profit, cycle: this.state.currentCycle }, 'success');
   }
 
   private async handleContractLoss(contract: MartingaleContract): Promise<void> {
@@ -442,16 +442,19 @@ export class MartingaleBotService {
     }
   }
 
-  private async logBotActivity(type: string, data: any): Promise<void> {
+  private async logBotActivity(type: string, data: any, level: 'info' | 'warn' | 'error' | 'debug' | 'success' = 'info'): Promise<void> {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         await supabase.from('bot_logs').insert({
           user_id: user.id,
-          level: 'info',
+          level,
           message: `Martingale Bot: ${type}`,
           data: { type, ...data }
         });
+        
+        // Also log to console for debugging
+        console.log(`[Martingale Bot ${level.toUpperCase()}] ${type}`, data);
       }
     } catch (error) {
       console.error('Erro ao salvar log:', error);

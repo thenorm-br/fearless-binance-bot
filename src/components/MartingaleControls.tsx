@@ -5,7 +5,8 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Play, Square, Settings, TrendingUp, TrendingDown } from 'lucide-react';
 import { martingaleBot } from '@/services/martingaleBot';
-import { MartingaleStats, TradingSignal } from '@/types/martingale';
+import { MartingaleStats, TradingSignal, MartingaleConfig } from '@/types/martingale';
+import { MartingaleConfigModal } from './MartingaleConfigModal';
 import { useToast } from '@/hooks/use-toast';
 
 const MartingaleControls: React.FC = () => {
@@ -14,6 +15,8 @@ const MartingaleControls: React.FC = () => {
   const [currentPrice, setCurrentPrice] = useState<number | null>(null);
   const [lastSignal, setLastSignal] = useState<TradingSignal | null>(null);
   const [remainingCooldown, setRemainingCooldown] = useState(0);
+  const [showConfigModal, setShowConfigModal] = useState(false);
+  const [config, setConfig] = useState<MartingaleConfig>(martingaleBot.getConfig());
   const { toast } = useToast();
 
   useEffect(() => {
@@ -79,6 +82,15 @@ const MartingaleControls: React.FC = () => {
     return config.initialStake * Math.pow(config.galeFactor, stats.currentAttempt);
   };
 
+  const handleConfigSave = (newConfig: MartingaleConfig) => {
+    martingaleBot.updateConfig(newConfig);
+    setConfig(newConfig);
+  };
+
+  const handleShowConfig = () => {
+    setShowConfigModal(true);
+  };
+
   return (
     <div className="space-y-6">
       {/* Control Panel */}
@@ -109,7 +121,11 @@ const MartingaleControls: React.FC = () => {
                 Parar Martingale Bot
               </Button>
             )}
-            <Button variant="outline" className="flex items-center gap-2">
+            <Button 
+              variant="outline" 
+              onClick={handleShowConfig}
+              className="flex items-center gap-2"
+            >
               <Settings className="h-4 w-4" />
               Configurações
             </Button>
@@ -220,6 +236,14 @@ const MartingaleControls: React.FC = () => {
           </CardContent>
         </Card>
       )}
+
+      {/* Configuration Modal */}
+      <MartingaleConfigModal
+        isOpen={showConfigModal}
+        onClose={() => setShowConfigModal(false)}
+        config={config}
+        onSave={handleConfigSave}
+      />
     </div>
   );
 };
