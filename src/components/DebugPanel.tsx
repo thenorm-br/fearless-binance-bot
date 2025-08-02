@@ -8,6 +8,28 @@ import { supabase } from '@/integrations/supabase/client';
 export function DebugPanel() {
   const [debugInfo, setDebugInfo] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [publicIp, setPublicIp] = useState<any>(null);
+  const [ipLoading, setIpLoading] = useState(false);
+
+  const getPublicIp = async () => {
+    setIpLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('get-public-ip');
+      if (error) {
+        console.error('Error getting public IP:', error);
+        setPublicIp({ success: false, error: error.message });
+      } else {
+        setPublicIp(data);
+      }
+    } catch (error) {
+      console.error('Error calling get-public-ip function:', error);
+      setPublicIp({ 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Unknown error' 
+      });
+    }
+    setIpLoading(false);
+  };
 
   const runDiagnostics = async () => {
     setIsLoading(true);
@@ -96,12 +118,50 @@ export function DebugPanel() {
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           Debug Panel
-          <Button onClick={runDiagnostics} disabled={isLoading} size="sm">
-            {isLoading ? 'Running...' : 'Run Diagnostics'}
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={getPublicIp} disabled={ipLoading} size="sm" variant="outline">
+              {ipLoading ? 'Getting IP...' : 'Get Public IP'}
+            </Button>
+            <Button onClick={runDiagnostics} disabled={isLoading} size="sm">
+              {isLoading ? 'Running...' : 'Run Diagnostics'}
+            </Button>
+          </div>
         </CardTitle>
       </CardHeader>
       <CardContent>
+        {publicIp && (
+          <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-950 rounded-lg border">
+            <h4 className="font-semibold mb-3 text-blue-900 dark:text-blue-100">🌐 IP Público para Binance</h4>
+            {publicIp.success ? (
+              <div className="space-y-3">
+                {publicIp.ipResults?.map((result: any, index: number) => (
+                  <div key={index} className="flex items-center justify-between p-2 bg-white dark:bg-gray-800 rounded border">
+                    <span className="text-sm font-mono text-green-700 dark:text-green-300 text-lg">
+                      {result.ip}
+                    </span>
+                    <Badge variant="outline" className="text-xs">
+                      {result.service}
+                    </Badge>
+                  </div>
+                ))}
+                <div className="mt-3 p-3 bg-green-50 dark:bg-green-950 rounded border border-green-200 dark:border-green-800">
+                  <p className="text-sm text-green-800 dark:text-green-200 font-medium">
+                    ✅ Use qualquer um destes IPs na configuração da Binance
+                  </p>
+                  <p className="text-xs text-green-600 dark:text-green-400 mt-1">
+                    Recomendamos usar o primeiro IP da lista
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="text-red-600 dark:text-red-400">
+                <p className="font-medium">❌ Erro ao obter IP público</p>
+                <p className="text-sm mt-1">{publicIp.error}</p>
+              </div>
+            )}
+          </div>
+        )}
+        
         {debugInfo && (
           <div className="space-y-4">
             <div>

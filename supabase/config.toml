@@ -14,3 +14,6 @@ verify_jwt = true
 
 [functions.test-binance-connection]
 verify_jwt = false
+
+[functions.get-public-ip]
+verify_jwt = false
