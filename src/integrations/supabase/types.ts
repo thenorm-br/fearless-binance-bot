@@ -14,7 +14,261 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      account_balances: {
+        Row: {
+          asset: string
+          free: number
+          id: string
+          last_updated: string
+          locked: number
+          total: number
+          usd_value: number
+          user_id: string
+        }
+        Insert: {
+          asset: string
+          free?: number
+          id?: string
+          last_updated?: string
+          locked?: number
+          total?: number
+          usd_value?: number
+          user_id: string
+        }
+        Update: {
+          asset?: string
+          free?: number
+          id?: string
+          last_updated?: string
+          locked?: number
+          total?: number
+          usd_value?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      active_orders: {
+        Row: {
+          created_at: string
+          id: string
+          order_id: string
+          price: number
+          quantity: number
+          side: string
+          status: string
+          symbol: string
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          order_id: string
+          price: number
+          quantity: number
+          side: string
+          status: string
+          symbol: string
+          type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          order_id?: string
+          price?: number
+          quantity?: number
+          side?: string
+          status?: string
+          symbol?: string
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      bot_logs: {
+        Row: {
+          created_at: string
+          data: Json | null
+          id: string
+          level: string
+          message: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          data?: Json | null
+          id?: string
+          level: string
+          message: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          data?: Json | null
+          id?: string
+          level?: string
+          message?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      bot_stats: {
+        Row: {
+          id: string
+          is_running: boolean | null
+          last_updated: string
+          monitored_pairs: number | null
+          start_time: string | null
+          total_profit: number | null
+          total_trades: number | null
+          user_id: string
+          win_rate: number | null
+        }
+        Insert: {
+          id?: string
+          is_running?: boolean | null
+          last_updated?: string
+          monitored_pairs?: number | null
+          start_time?: string | null
+          total_profit?: number | null
+          total_trades?: number | null
+          user_id: string
+          win_rate?: number | null
+        }
+        Update: {
+          id?: string
+          is_running?: boolean | null
+          last_updated?: string
+          monitored_pairs?: number | null
+          start_time?: string | null
+          total_profit?: number | null
+          total_trades?: number | null
+          user_id?: string
+          win_rate?: number | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string | null
+          full_name: string | null
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      trades: {
+        Row: {
+          created_at: string
+          executed_at: string
+          fee: number | null
+          id: string
+          order_id: string | null
+          price: number
+          profit: number | null
+          quantity: number
+          side: string
+          status: string
+          symbol: string
+          total_amount: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          executed_at?: string
+          fee?: number | null
+          id?: string
+          order_id?: string | null
+          price: number
+          profit?: number | null
+          quantity: number
+          side: string
+          status?: string
+          symbol: string
+          total_amount: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          executed_at?: string
+          fee?: number | null
+          id?: string
+          order_id?: string | null
+          price?: number
+          profit?: number | null
+          quantity?: number
+          side?: string
+          status?: string
+          symbol?: string
+          total_amount?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      trading_configs: {
+        Row: {
+          buy_grids: Json
+          created_at: string
+          enabled: boolean | null
+          id: string
+          max_buy_amount: number
+          min_profit_percentage: number
+          sell_grids: Json
+          stop_loss_percentage: number
+          symbol: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          buy_grids?: Json
+          created_at?: string
+          enabled?: boolean | null
+          id?: string
+          max_buy_amount?: number
+          min_profit_percentage?: number
+          sell_grids?: Json
+          stop_loss_percentage?: number
+          symbol: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          buy_grids?: Json
+          created_at?: string
+          enabled?: boolean | null
+          id?: string
+          max_buy_amount?: number
+          min_profit_percentage?: number
+          sell_grids?: Json
+          stop_loss_percentage?: number
+          symbol?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
