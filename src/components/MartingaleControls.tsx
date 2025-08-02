@@ -36,8 +36,8 @@ const MartingaleControls: React.FC = () => {
       await martingaleBot.startBot();
       setIsRunning(true);
       toast({
-        title: "Bot Iniciado",
-        description: "Martingale Bot SOLUSDT iniciado com sucesso!"
+        title: "Martingale Bot Iniciado",
+        description: "Robô Martingale SOLUSDT iniciado com sucesso!"
       });
     } catch (error) {
       toast({
@@ -53,8 +53,8 @@ const MartingaleControls: React.FC = () => {
       await martingaleBot.stopBot();
       setIsRunning(false);
       toast({
-        title: "Bot Parado",
-        description: "Martingale Bot SOLUSDT parado com sucesso!"
+        title: "Martingale Bot Parado",
+        description: "Robô Martingale SOLUSDT parado com sucesso!"
       });
     } catch (error) {
       toast({
@@ -86,7 +86,7 @@ const MartingaleControls: React.FC = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <TrendingUp className="h-5 w-5" />
-            Martingale Bot SOLUSDT
+            Martingale Bot - SOLUSDT
             <Badge variant={isRunning ? "default" : "secondary"}>
               {isRunning ? "Ativo" : "Parado"}
             </Badge>
@@ -97,7 +97,7 @@ const MartingaleControls: React.FC = () => {
             {!isRunning ? (
               <Button onClick={handleStartBot} className="flex items-center gap-2">
                 <Play className="h-4 w-4" />
-                Iniciar Bot
+                Iniciar Martingale Bot
               </Button>
             ) : (
               <Button 
@@ -106,7 +106,7 @@ const MartingaleControls: React.FC = () => {
                 className="flex items-center gap-2"
               >
                 <Square className="h-4 w-4" />
-                Parar Bot
+                Parar Martingale Bot
               </Button>
             )}
             <Button variant="outline" className="flex items-center gap-2">

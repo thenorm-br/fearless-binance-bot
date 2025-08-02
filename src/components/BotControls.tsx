@@ -19,13 +19,13 @@ export function BotControls({ isRunning }: BotControlsProps) {
     try {
       await tradingBot.startBot();
       toast({
-        title: "Bot Started",
-        description: "Trading bot is now active and monitoring markets",
+        title: "Grid Bot Iniciado",
+        description: "Robô de Grid Trading está ativo e monitorando mercados",
       });
     } catch (error) {
       toast({
-        title: "Error Starting Bot",
-        description: "Failed to start trading bot. Check configuration.",
+        title: "Erro ao Iniciar Grid Bot",
+        description: "Falha ao iniciar robô de Grid Trading. Verifique configuração.",
         variant: "destructive",
       });
     } finally {
@@ -38,13 +38,13 @@ export function BotControls({ isRunning }: BotControlsProps) {
     try {
       await tradingBot.stopBot();
       toast({
-        title: "Bot Stopped",
-        description: "Trading bot has been stopped safely",
+        title: "Grid Bot Parado",
+        description: "Robô de Grid Trading foi parado com segurança",
       });
     } catch (error) {
       toast({
-        title: "Error Stopping Bot",
-        description: "Failed to stop trading bot properly",
+        title: "Erro ao Parar Grid Bot",
+        description: "Falha ao parar robô de Grid Trading adequadamente",
         variant: "destructive",
       });
     } finally {
@@ -57,10 +57,10 @@ export function BotControls({ isRunning }: BotControlsProps) {
       <CardHeader className="pb-4">
         <CardTitle className="flex items-center">
           <Settings className="w-5 h-5 mr-2" />
-          Bot Controls
+          Grid Trading Bot
         </CardTitle>
         <CardDescription>
-          Start, stop, and monitor trading bot status
+          Controle do robô de Grid Trading (BTC, ETH, BNB, ADA, SOL)
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -91,7 +91,7 @@ export function BotControls({ isRunning }: BotControlsProps) {
               className="flex-1 bg-profit hover:bg-profit/90 text-profit-foreground"
             >
               <Play className="w-4 h-4 mr-2" />
-              {isLoading ? 'Starting...' : 'Start Bot'}
+              {isLoading ? 'Iniciando...' : 'Iniciar Grid Bot'}
             </Button>
           ) : (
             <Button
@@ -101,7 +101,7 @@ export function BotControls({ isRunning }: BotControlsProps) {
               className="flex-1"
             >
               <Square className="w-4 h-4 mr-2" />
-              {isLoading ? 'Stopping...' : 'Stop Bot'}
+              {isLoading ? 'Parando...' : 'Parar Grid Bot'}
             </Button>
           )}
           
@@ -115,23 +115,23 @@ export function BotControls({ isRunning }: BotControlsProps) {
           <div className="flex justify-between">
             <span className="text-muted-foreground">Status:</span>
             <span className={isRunning ? 'text-profit' : 'text-muted-foreground'}>
-              {isRunning ? 'Active' : 'Stopped'}
+              {isRunning ? 'Ativo' : 'Parado'}
             </span>
           </div>
           
           <div className="flex justify-between">
-            <span className="text-muted-foreground">Strategy:</span>
+            <span className="text-muted-foreground">Estratégia:</span>
             <span>Grid Trading</span>
           </div>
           
           <div className="flex justify-between">
-            <span className="text-muted-foreground">Risk Level:</span>
-            <span className="text-warning">Medium</span>
+            <span className="text-muted-foreground">Nível de Risco:</span>
+            <span className="text-warning">Médio</span>
           </div>
           
           {isRunning && (
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Uptime:</span>
+              <span className="text-muted-foreground">Tempo Ativo:</span>
               <span>00:45:32</span>
             </div>
           )}
