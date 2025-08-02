@@ -7,6 +7,10 @@ export interface TradingPair {
   quantity?: number;
   isMonitoring: boolean;
   status: 'idle' | 'buying' | 'selling' | 'monitoring';
+  volume24h?: number;
+  high24h?: number;
+  low24h?: number;
+  lastUpdate?: number;
 }
 
 export interface GridConfig {

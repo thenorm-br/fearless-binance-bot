@@ -2,7 +2,7 @@ import { TechnicalIndicators, TradingSignal, PriceHistory } from '@/types/martin
 
 export class TechnicalAnalysisService {
   private lastSignalTime: number = 0;
-  private signalCooldown: number = 30000; // 30 seconds
+  private signalCooldown: number = 10000; // 10 seconds
 
   calculateRSI(prices: number[], period: number = 14): number {
     if (prices.length < period + 1) {
@@ -109,11 +109,11 @@ export class TechnicalAnalysisService {
     let signalStrength = 50;
     let signalType: 'BUY' | 'SELL' = 'BUY';
 
-    // Strong RSI signals
-    if (rsi < 25) {
+    // Strong RSI signals (adjusted for crypto volatility)
+    if (rsi < 30) {
       signalType = 'BUY';
       signalStrength = 85;
-    } else if (rsi > 75) {
+    } else if (rsi > 70) {
       signalType = 'SELL';
       signalStrength = 85;
     }

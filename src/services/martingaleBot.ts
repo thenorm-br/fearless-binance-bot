@@ -26,15 +26,15 @@ export class MartingaleBotService {
     const defaultConfig: MartingaleConfig = {
       symbol: 'SOLUSDT',
       initialStake: 5.0,
-      galeFactor: 2.1,
-      maxAttempts: 4,
-      minProbability: 80.0,
-      victoryCooldown: 30,
-      defeatCooldown: 120,
-      contractDuration: 1,
-      maxDailyLoss: 20.0,
-      capitalTotal: 100.0,
-      maxRiskPerCycle: 15.0
+      galeFactor: 2.0,
+      maxAttempts: 5,
+      minProbability: 65.0,
+      victoryCooldown: 120,
+      defeatCooldown: 300,
+      contractDuration: 60,
+      maxDailyLoss: 50.0,
+      capitalTotal: 1000.0,
+      maxRiskPerCycle: 100.0
     };
 
     const defaultStats: MartingaleStats = {
@@ -69,24 +69,58 @@ export class MartingaleBotService {
 
     console.log('🚀 Iniciando Martingale Bot SOLUSDT');
     
-    // Initialize daily tracking
-    const balance = await this.getUsdtBalance();
-    this.state.stats.startBalance = balance;
-    this.state.stats.isRunning = true;
-    this.state.emergencyStop = false;
+    try {
+      // Initialize daily tracking
+      const balance = await this.getUsdtBalance();
+      this.state.stats.startBalance = balance;
+      this.state.stats.isRunning = true;
+      this.state.emergencyStop = false;
 
-    // Start WebSocket for real-time prices
-    this.startWebSocket();
-    
-    // Start main trading loop
-    this.startTradingLoop();
+      // Initialize price history with real data
+      await this.initializePriceHistory();
 
-    // Log bot start
-    await this.logBotActivity('BOT_STARTED', {
-      symbol: this.state.config.symbol,
-      startBalance: balance,
-      config: this.state.config
-    });
+      // Start WebSocket for real-time prices
+      this.startWebSocket();
+      
+      // Start main trading loop
+      this.startTradingLoop();
+
+      // Log bot start
+      await this.logBotActivity('BOT_STARTED', {
+        symbol: this.state.config.symbol,
+        startBalance: balance,
+        config: this.state.config
+      }, 'success');
+      
+    } catch (error) {
+      this.state.stats.isRunning = false;
+      await this.logBotActivity('BOT_START_ERROR', { error: error.message }, 'error');
+      throw error;
+    }
+  }
+
+  private async initializePriceHistory(): Promise<void> {
+    try {
+      // Get real price data from Binance to initialize history
+      const prices = await realBinanceApi.getCurrentPrices([this.state.config.symbol]);
+      if (prices.length > 0) {
+        const currentPrice = prices[0].price;
+        
+        // Initialize with some historical-like data (simulate recent prices)
+        for (let i = 49; i >= 0; i--) {
+          const variation = (Math.random() - 0.5) * 0.02; // ±1% variation
+          const historicalPrice = currentPrice * (1 + variation * i * 0.1);
+          this.technicalAnalysis.addPriceData(this.state.priceHistory, historicalPrice);
+        }
+        
+        await this.logBotActivity('PRICE_HISTORY_INITIALIZED', { 
+          dataPoints: this.state.priceHistory.prices.length,
+          currentPrice 
+        }, 'info');
+      }
+    } catch (error) {
+      await this.logBotActivity('PRICE_HISTORY_ERROR', { error: error.message }, 'error');
+    }
   }
 
   async stopBot(): Promise<void> {

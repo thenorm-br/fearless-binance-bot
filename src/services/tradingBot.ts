@@ -1,4 +1,4 @@
-import { binanceApi } from './binanceApi';
+import { realBinanceApi } from './realBinanceApi';
 import { TradingConfig, TradingPair, PriceData, BotStats } from '@/types/trading';
 
 class TradingBotService {
@@ -97,20 +97,33 @@ class TradingBotService {
   private async initializeMonitoredPairs(): Promise<void> {
     try {
       const symbols = this.tradingConfigs.filter(c => c.enabled).map(c => c.symbol);
-      const priceData = binanceApi.getPriceData();
+      const priceData = await realBinanceApi.getCurrentPrices(symbols);
       
       this.monitoredPairs = priceData.map(data => ({
         symbol: data.symbol,
         price: data.price,
         priceChangePercent: data.change24h.toFixed(2),
         isMonitoring: true,
-        status: 'monitoring' as const
+        status: 'monitoring' as const,
+        volume24h: data.volume24h,
+        high24h: data.high24h,
+        low24h: data.low24h,
+        lastUpdate: Date.now()
       }));
 
       this.stats.monitoredPairs = this.monitoredPairs.length;
-      console.log(`Initialized ${this.monitoredPairs.length} trading pairs`);
+      console.log(`Initialized ${this.monitoredPairs.length} trading pairs with real data`);
     } catch (error) {
       console.error('Error initializing monitored pairs:', error);
+      // Fallback to default pairs if API fails
+      this.monitoredPairs = this.tradingConfigs.filter(c => c.enabled).map(config => ({
+        symbol: config.symbol,
+        price: 100, // Default price
+        priceChangePercent: '0.00',
+        isMonitoring: true,
+        status: 'monitoring' as const,
+        lastUpdate: Date.now()
+      }));
     }
   }
 
@@ -118,14 +131,19 @@ class TradingBotService {
     if (!this.isRunning) return;
 
     try {
-      // Update prices
-      const priceData = binanceApi.getPriceData();
+      // Update prices with real data
+      const symbols = this.monitoredPairs.map(p => p.symbol);
+      const priceData = await realBinanceApi.getCurrentPrices(symbols);
       
       for (const data of priceData) {
         const pair = this.monitoredPairs.find(p => p.symbol === data.symbol);
         if (pair) {
           pair.price = data.price;
           pair.priceChangePercent = data.change24h.toFixed(2);
+          pair.volume24h = data.volume24h;
+          pair.high24h = data.high24h;
+          pair.low24h = data.low24h;
+          pair.lastUpdate = Date.now();
           
           // Check trading signals
           await this.checkTradingSignals(pair, data);
@@ -152,25 +170,38 @@ class TradingBotService {
   }
 
   private async checkBuySignals(pair: TradingPair, config: TradingConfig, priceData: PriceData): Promise<void> {
-    // Simulate grid trading buy logic
+    // Real grid trading buy logic
     for (const grid of config.buyGrids) {
-      const triggerPrice = priceData.low24h * grid.triggerPercentage;
+      const triggerPrice = (priceData.low24h || priceData.price * 0.98) * grid.triggerPercentage;
       
       if (priceData.price <= triggerPrice && pair.status === 'monitoring') {
         console.log(`Buy signal detected for ${pair.symbol} at ${priceData.price}`);
         
-        // Simulate buy order
-        pair.status = 'buying';
-        pair.lastBuyPrice = priceData.price;
-        pair.quantity = (grid.maxPurchaseAmount || 50) / priceData.price;
-        
-        // Update stats
-        this.stats.totalTrades++;
-        
-        setTimeout(() => {
+        try {
+          // Execute real buy order via edge function
+          const quantity = (grid.maxPurchaseAmount || 50) / priceData.price;
+          
+          pair.status = 'buying';
+          
+          // Place real order
+          await realBinanceApi.placeBuyOrder(pair.symbol, quantity, priceData.price);
+          
+          pair.lastBuyPrice = priceData.price;
+          pair.quantity = quantity;
+          
+          // Update stats
+          this.stats.totalTrades++;
+          
+          console.log(`Real buy order placed for ${pair.symbol}: ${quantity} at $${priceData.price}`);
+          
+          setTimeout(() => {
+            pair.status = 'monitoring';
+          }, 2000);
+          
+        } catch (error) {
+          console.error(`Failed to place buy order for ${pair.symbol}:`, error);
           pair.status = 'monitoring';
-          console.log(`Buy order executed for ${pair.symbol}`);
-        }, 1000);
+        }
         
         break;
       }
@@ -178,7 +209,7 @@ class TradingBotService {
   }
 
   private async checkSellSignals(pair: TradingPair, config: TradingConfig, priceData: PriceData): Promise<void> {
-    if (!pair.lastBuyPrice) return;
+    if (!pair.lastBuyPrice || !pair.quantity) return;
 
     // Check for profit signals
     for (const grid of config.sellGrids) {
@@ -187,22 +218,37 @@ class TradingBotService {
       if (priceData.price >= triggerPrice && pair.status === 'monitoring') {
         console.log(`Sell signal detected for ${pair.symbol} at ${priceData.price}`);
         
-        const profit = (priceData.price - pair.lastBuyPrice) * (pair.quantity || 0);
-        
-        // Simulate sell order
-        pair.status = 'selling';
-        
-        setTimeout(() => {
+        try {
+          const sellQuantity = pair.quantity * grid.sellQuantityPercentage;
+          const profit = (priceData.price - pair.lastBuyPrice) * sellQuantity;
+          
+          pair.status = 'selling';
+          
+          // Place real sell order
+          await realBinanceApi.placeSellOrder(pair.symbol, sellQuantity, priceData.price);
+          
+          console.log(`Real sell order placed for ${pair.symbol}: ${sellQuantity} at $${priceData.price}, expected profit: $${profit.toFixed(2)}`);
+          
+          setTimeout(() => {
+            pair.status = 'monitoring';
+            
+            // Update remaining quantity
+            pair.quantity = pair.quantity! - sellQuantity;
+            if (pair.quantity <= 0) {
+              pair.lastBuyPrice = undefined;
+              pair.quantity = undefined;
+            }
+            
+            // Update stats
+            this.stats.totalProfit += profit;
+            this.stats.totalTrades++;
+            
+          }, 2000);
+          
+        } catch (error) {
+          console.error(`Failed to place sell order for ${pair.symbol}:`, error);
           pair.status = 'monitoring';
-          pair.lastBuyPrice = undefined;
-          pair.quantity = undefined;
-          
-          // Update stats
-          this.stats.totalProfit += profit;
-          this.stats.totalTrades++;
-          
-          console.log(`Sell order executed for ${pair.symbol}, profit: $${profit.toFixed(2)}`);
-        }, 1000);
+        }
         
         break;
       }
