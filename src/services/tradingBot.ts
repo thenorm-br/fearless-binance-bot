@@ -97,7 +97,7 @@ class TradingBotService {
   private async initializeMonitoredPairs(): Promise<void> {
     try {
       const symbols = this.tradingConfigs.filter(c => c.enabled).map(c => c.symbol);
-      const priceData = binanceApi.getMockPrices(); // Use mock data for development
+      const priceData = binanceApi.getPriceData();
       
       this.monitoredPairs = priceData.map(data => ({
         symbol: data.symbol,
@@ -119,7 +119,7 @@ class TradingBotService {
 
     try {
       // Update prices
-      const priceData = binanceApi.getMockPrices(); // Use mock data for development
+      const priceData = binanceApi.getPriceData();
       
       for (const data of priceData) {
         const pair = this.monitoredPairs.find(p => p.symbol === data.symbol);

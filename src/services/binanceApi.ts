@@ -1,207 +1,171 @@
-import Binance from 'binance-api-node';
 import { TradingPair, AccountBalance, OpenOrder, Trade, PriceData } from '@/types/trading';
 
-// Trading Bot API Service
+// Mock Binance API Service for Browser Compatibility
 class BinanceApiService {
-  private client: any;
-  private isInitialized = false;
+  private isInitialized = true;
+  private mockPrices: { [key: string]: number } = {
+    'BTCUSDT': 43250.50,
+    'ETHUSDT': 2680.25,
+    'BNBUSDT': 315.80,
+    'ADAUSDT': 0.4850,
+    'SOLUSDT': 98.45
+  };
 
   constructor() {
-    // Initialize with provided keys - IMPORTANT: In production, store securely
-    this.initializeClient();
+    console.log('Mock Binance API initialized successfully');
+    // Simulate price fluctuations
+    this.startPriceSimulation();
   }
 
-  private initializeClient() {
-    try {
-      this.client = Binance({
-        apiKey: '0l8qhpPxxCHrzUtPTFE2ARGyJr6cCVOsGZQJQtJufEH41L6DUJFiXvn12VXjZj0I',
-        apiSecret: '0dn8rqx5wNnc3EajennmSZrXGDqeNupKKwCPOdnMxnvOkMAFQFe1VpTLRqvaP6hO'
-        // Note: Using test net is recommended for development
+  private startPriceSimulation() {
+    setInterval(() => {
+      Object.keys(this.mockPrices).forEach(symbol => {
+        // Simulate price changes (-2% to +2%)
+        const change = (Math.random() - 0.5) * 0.04;
+        this.mockPrices[symbol] *= (1 + change);
       });
-      this.isInitialized = true;
-      console.log('Binance API initialized successfully');
-    } catch (error) {
-      console.error('Failed to initialize Binance API:', error);
-    }
+    }, 3000);
   }
 
   async getAccountBalances(): Promise<AccountBalance[]> {
     if (!this.isInitialized) throw new Error('API not initialized');
     
-    try {
-      const account = await this.client.accountInfo();
-      const prices = await this.client.prices();
-      
-      return account.balances
-        .filter((balance: any) => parseFloat(balance.free) > 0 || parseFloat(balance.locked) > 0)
-        .map((balance: any) => {
-          const total = parseFloat(balance.free) + parseFloat(balance.locked);
-          const price = balance.asset === 'USDT' ? 1 : (prices[`${balance.asset}USDT`] || 0);
-          
-          return {
-            asset: balance.asset,
-            free: balance.free,
-            locked: balance.locked,
-            total,
-            usdValue: total * parseFloat(price)
-          };
-        });
-    } catch (error) {
-      console.error('Error fetching account balances:', error);
-      throw error;
-    }
+    // Mock account balances
+    const mockBalances = [
+      { asset: 'USDT', free: '1250.50', locked: '0.00', total: 1250.50, usdValue: 1250.50 },
+      { asset: 'BTC', free: '0.05432100', locked: '0.00', total: 0.054321, usdValue: this.mockPrices['BTCUSDT'] * 0.054321 },
+      { asset: 'ETH', free: '0.85647200', locked: '0.00', total: 0.856472, usdValue: this.mockPrices['ETHUSDT'] * 0.856472 },
+      { asset: 'BNB', free: '3.25000000', locked: '0.00', total: 3.25, usdValue: this.mockPrices['BNBUSDT'] * 3.25 },
+      { asset: 'ADA', free: '2580.00000000', locked: '0.00', total: 2580, usdValue: this.mockPrices['ADAUSDT'] * 2580 },
+      { asset: 'SOL', free: '12.45000000', locked: '0.00', total: 12.45, usdValue: this.mockPrices['SOLUSDT'] * 12.45 }
+    ];
+
+    return mockBalances;
   }
 
   async getCurrentPrices(symbols: string[]): Promise<PriceData[]> {
     if (!this.isInitialized) throw new Error('API not initialized');
     
-    try {
-      const ticker24hr = await this.client.dailyStats();
+    return symbols.map(symbol => {
+      const price = this.mockPrices[symbol] || 0;
+      const change24h = (Math.random() - 0.5) * 10; // Random change -5% to +5%
       
-      return symbols.map(symbol => {
-        const tickerData = ticker24hr.find((t: any) => t.symbol === symbol);
-        
-        if (!tickerData) {
-          return {
-            symbol,
-            price: 0,
-            change24h: 0,
-            volume24h: 0,
-            high24h: 0,
-            low24h: 0,
-            timestamp: Date.now()
-          };
-        }
-
-        return {
-          symbol,
-          price: parseFloat(tickerData.lastPrice),
-          change24h: parseFloat(tickerData.priceChangePercent),
-          volume24h: parseFloat(tickerData.volume),
-          high24h: parseFloat(tickerData.highPrice),
-          low24h: parseFloat(tickerData.lowPrice),
-          timestamp: Date.now()
-        };
-      });
-    } catch (error) {
-      console.error('Error fetching current prices:', error);
-      throw error;
-    }
+      return {
+        symbol,
+        price,
+        change24h,
+        volume24h: Math.random() * 50000 + 10000,
+        high24h: price * (1 + Math.random() * 0.05),
+        low24h: price * (1 - Math.random() * 0.05),
+        timestamp: Date.now()
+      };
+    });
   }
 
   async getOpenOrders(): Promise<OpenOrder[]> {
     if (!this.isInitialized) throw new Error('API not initialized');
     
-    try {
-      const orders = await this.client.openOrders();
-      
-      return orders.map((order: any) => ({
-        symbol: order.symbol,
-        orderId: order.orderId,
-        type: order.type,
-        side: order.side,
-        amount: parseFloat(order.origQty),
-        price: parseFloat(order.price),
-        status: order.status,
-        timestamp: order.time
-      }));
-    } catch (error) {
-      console.error('Error fetching open orders:', error);
-      throw error;
-    }
+    // Mock open orders
+    const mockOrders: OpenOrder[] = [
+      {
+        symbol: 'BTCUSDT',
+        orderId: '12345',
+        type: 'BUY',
+        side: 'BUY',
+        amount: 0.001,
+        price: 42800,
+        status: 'NEW',
+        timestamp: Date.now() - 300000
+      }
+    ];
+    
+    return mockOrders;
   }
 
   async placeBuyOrder(symbol: string, quantity: number, price: number): Promise<any> {
     if (!this.isInitialized) throw new Error('API not initialized');
     
-    try {
-      const order = await this.client.order({
-        symbol,
-        side: 'BUY',
-        type: 'STOP_LOSS_LIMIT',
-        quantity: quantity.toString(),
-        price: price.toString(),
-        stopPrice: (price * 0.995).toString(), // 0.5% below price
-        timeInForce: 'GTC'
-      });
-      
-      console.log(`Buy order placed for ${symbol}:`, order);
-      return order;
-    } catch (error) {
-      console.error(`Error placing buy order for ${symbol}:`, error);
-      throw error;
-    }
+    // Mock buy order
+    const mockOrder = {
+      symbol,
+      orderId: Math.random().toString(36).substr(2, 9),
+      side: 'BUY',
+      type: 'STOP_LOSS_LIMIT',
+      quantity: quantity.toString(),
+      price: price.toString(),
+      status: 'NEW',
+      timestamp: Date.now()
+    };
+    
+    console.log(`Mock buy order placed for ${symbol}:`, mockOrder);
+    return mockOrder;
   }
 
   async placeSellOrder(symbol: string, quantity: number, price: number): Promise<any> {
     if (!this.isInitialized) throw new Error('API not initialized');
     
-    try {
-      const order = await this.client.order({
-        symbol,
-        side: 'SELL',
-        type: 'STOP_LOSS_LIMIT',
-        quantity: quantity.toString(),
-        price: price.toString(),
-        stopPrice: (price * 1.005).toString(), // 0.5% above price
-        timeInForce: 'GTC'
-      });
-      
-      console.log(`Sell order placed for ${symbol}:`, order);
-      return order;
-    } catch (error) {
-      console.error(`Error placing sell order for ${symbol}:`, error);
-      throw error;
-    }
+    // Mock sell order
+    const mockOrder = {
+      symbol,
+      orderId: Math.random().toString(36).substr(2, 9),
+      side: 'SELL',
+      type: 'STOP_LOSS_LIMIT',
+      quantity: quantity.toString(),
+      price: price.toString(),
+      status: 'NEW',
+      timestamp: Date.now()
+    };
+    
+    console.log(`Mock sell order placed for ${symbol}:`, mockOrder);
+    return mockOrder;
   }
 
   async cancelOrder(symbol: string, orderId: string): Promise<any> {
     if (!this.isInitialized) throw new Error('API not initialized');
     
-    try {
-      const result = await this.client.cancelOrder({
-        symbol,
-        orderId
-      });
-      
-      console.log(`Order cancelled for ${symbol}:`, result);
-      return result;
-    } catch (error) {
-      console.error(`Error cancelling order for ${symbol}:`, error);
-      throw error;
-    }
+    // Mock cancel order
+    const result = {
+      symbol,
+      orderId,
+      status: 'CANCELED',
+      timestamp: Date.now()
+    };
+    
+    console.log(`Mock order cancelled for ${symbol}:`, result);
+    return result;
   }
 
   async getRecentTrades(symbol: string, limit: number = 50): Promise<Trade[]> {
     if (!this.isInitialized) throw new Error('API not initialized');
     
-    try {
-      const trades = await this.client.myTrades({ symbol, limit });
-      
-      return trades.map((trade: any) => ({
-        id: trade.id,
-        symbol: trade.symbol,
-        side: trade.isBuyer ? 'BUY' : 'SELL',
-        amount: parseFloat(trade.qty),
-        price: parseFloat(trade.price),
-        fee: parseFloat(trade.commission),
-        timestamp: trade.time
-      }));
-    } catch (error) {
-      console.error(`Error fetching recent trades for ${symbol}:`, error);
-      throw error;
+    // Mock recent trades
+    const mockTrades: Trade[] = [];
+    for (let i = 0; i < Math.min(limit, 10); i++) {
+      mockTrades.push({
+        id: Math.random().toString(36).substr(2, 9),
+        symbol,
+        side: Math.random() > 0.5 ? 'BUY' : 'SELL',
+        amount: Math.random() * 0.1,
+        price: this.mockPrices[symbol] || 0,
+        fee: Math.random() * 0.001,
+        timestamp: Date.now() - (i * 3600000) // Each trade 1 hour apart
+      });
     }
+    
+    return mockTrades;
   }
 
-  // Mock data for development - remove in production
-  getMockPrices(): PriceData[] {
-    return [
-      { symbol: 'BTCUSDT', price: 43250.50, change24h: 2.45, volume24h: 25000, high24h: 44000, low24h: 42800, timestamp: Date.now() },
-      { symbol: 'ETHUSDT', price: 2680.25, change24h: -1.23, volume24h: 15000, high24h: 2720, low24h: 2650, timestamp: Date.now() },
-      { symbol: 'BNBUSDT', price: 315.80, change24h: 0.85, volume24h: 8500, high24h: 320, low24h: 310, timestamp: Date.now() },
-      { symbol: 'ADAUSDT', price: 0.4850, change24h: 3.20, volume24h: 12000, high24h: 0.495, low24h: 0.470, timestamp: Date.now() },
-      { symbol: 'SOLUSDT', price: 98.45, change24h: -2.10, volume24h: 9800, high24h: 102, low24h: 96.5, timestamp: Date.now() }
-    ];
+  // Real-time price data simulation
+  getPriceData(): PriceData[] {
+    return Object.keys(this.mockPrices).map(symbol => ({
+      symbol,
+      price: this.mockPrices[symbol],
+      change24h: (Math.random() - 0.5) * 10,
+      volume24h: Math.random() * 50000 + 10000,
+      high24h: this.mockPrices[symbol] * (1 + Math.random() * 0.05),
+      low24h: this.mockPrices[symbol] * (1 - Math.random() * 0.05),
+      timestamp: Date.now()
+    }));
   }
 }
 
