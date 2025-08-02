@@ -13,16 +13,33 @@ serve(async (req) => {
   }
 
   try {
+    console.log('Creating Supabase client...');
+    
+    const authHeader = req.headers.get('Authorization');
+    console.log('Authorization header present:', !!authHeader);
+    
+    if (!authHeader) {
+      console.error('No authorization header provided');
+      throw new Error('Authorization header required');
+    }
+
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      { global: { headers: { Authorization: req.headers.get('Authorization')! } } }
+      { global: { headers: { Authorization: authHeader } } }
     );
 
-    const { data: { user } } = await supabaseClient.auth.getUser();
+    console.log('Getting user from auth...');
+    const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
+    
+    if (authError) {
+      console.error('Auth error:', authError);
+      throw new Error(`Authentication failed: ${authError.message}`);
+    }
+    
     if (!user) {
-      console.error('Unauthorized access attempt');
-      throw new Error('Unauthorized');
+      console.error('No user found in token');
+      throw new Error('Invalid or expired token');
     }
 
     console.log(`Fetching account balance for user: ${user.id}`);
